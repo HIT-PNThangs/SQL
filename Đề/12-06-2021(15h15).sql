@@ -15,6 +15,7 @@ CREATE TABLE Ban (
 	ViTri NVARCHAR(30),
 	SoChoNgoi INT
 )
+go
 
 CREATE TABLE Mon (
 	MaMon CHAR(5) PRIMARY KEY,
@@ -24,6 +25,7 @@ CREATE TABLE Mon (
 	Giaban MONEY,
 	Mota NVARCHAR(100)
 )
+go
 
 CREATE TABLE HoaDon (
 	SoHD CHAR(5) PRIMARY KEY,
@@ -34,16 +36,19 @@ CREATE TABLE HoaDon (
 	CONSTRAINT fk_hoaDon_ban FOREIGN KEY (MaBan) REFERENCES Ban(MaBan), 
 	CONSTRAINT fk_hoaDon_mon FOREIGN KEY (MaMon) REFERENCES Mon(MaMon)
 )
+go
 
 INSERT INTO Ban VALUES 
 ('B01', N'Tầng 1', 4), 
 ('B02', N'Tầng 2', 5), 
 ('B03', N'Tầng 3', 6)
+go
 
 INSERT INTO Mon VALUES 
 ('M01', N'Cá', N'Xanh', 10, 2000000, N'Canh cá'),
 ('M02', N'Rau cải', N'Xanh', 20, 3000000, N'Canh rau'),
 ('M03', N'Thịt lợn', N'Đỏ', 30, 4000000, N'Thịt nướng')
+go
 
 INSERT INTO HoaDon VALUES 
 ('HD01', 'B01', 'M01', 11, '2021-01-01'),
@@ -51,13 +56,14 @@ INSERT INTO HoaDon VALUES
 ('HD03', 'B01', 'M01', 13, '2021-01-03'),
 ('HD04', 'B02', 'M02', 14, '2021-01-04'),
 ('HD05', 'B03', 'M03', 15, '2021-01-05')
+go
 
 SELECT * FROM Ban
 SELECT * FROM Mon
 SELECT * FROM HoaDon
+go
 
 --Câu 2:
-GO
 CREATE FUNCTION fn_cau2 (@viTri NVARCHAR(30), @ngayDat DATE) 
 RETURNS MONEY
 BEGIN
@@ -74,14 +80,20 @@ BEGIN
 
 	RETURN @tongTien
 END
+go
 
 --Thực thi
 --SAI NGÀY
 SELECT dbo.fn_cau2(N'Tầng 1', '1999-01-01') AS N'Giá bán'
+go
+
 --SAI VỊ TRÍ
 SELECT dbo.fn_cau2(N'Tầng hầm', '2021-01-01') AS N'Giá bán'
+go
+
 --ĐÚNG
 SELECT dbo.fn_cau2(N'Tầng 1', '2021-01-01') AS N'Giá bán'
+go
 
 --Câu 3:
 GO
@@ -106,20 +118,22 @@ BEGIN
 			SET @kq = 0
 		END
 END
+go
 
 --THỰC THI
 --KHÔNG THÀNH CÔNG 
-GO
 DECLARE @KQ INT
 EXEC p_cau3 'HD06', 15, '2021-01-05', 'B00', 'M03', @KQ OUTPUT
 SELECT @KQ AS N'kết quả'
 --KHÔNG THÀNH CÔNG
 GO
+
 DECLARE @KQ INT
 EXEC p_cau3 'HD06', 15, '2021-01-05', 'B01', 'M00', @KQ OUTPUT
 SELECT @KQ AS N'kết quả'
 --THÀNH CÔNG
 GO
+
 DECLARE @KQ INT
 EXEC p_cau3 'HD06', 15, '2021-01-05', 'B03', 'M03', @KQ OUTPUT
 SELECT @KQ AS N'kết quả'
@@ -156,29 +170,33 @@ SELECT * FROM HoaDon
 INSERT INTO HoaDon VALUES ('HD07', 'B03', 'M01', 5, '2021-01-01')
 SELECT * FROM Mon
 SELECT * FROM HoaDon
-
-
-
+go
 
 create trigger tg_cau4
 on HoaDon
 for insert
 as
-begin
-	if exists ( select * from inserted join Mon on inserted.MaMon = Mon.MaMon
-				where SoLuong < SoLuongDat)
 	begin
-	print N'Số lượng đặt lớn hơn số lượng có'
-	rollback tran
-	return 
+		if exists ( select * from inserted join Mon on inserted.MaMon = Mon.MaMon
+							where SoLuong < SoLuongDat)
+			begin
+				print N'Số lượng đặt lớn hơn số lượng có'
+				rollback tran
+				return 
+			end
+		update Mon
+		set	SoLuong = SoLuong - SoLuongDat
+		from Mon join inserted on Mon.MaMon = inserted.MaMon
 	end
-	update Mon
-	set	SoLuong = SoLuong - SoLuongDat
-	from Mon join inserted on Mon.MaMon = inserted.MaMon
-end
+go
+
 select * from HoaDon join Ban on HoaDon.MaBan = Ban.MaBan
 join Mon on HoaDon.MaMon = Mon.MaMon
+
 -- TH sau số lượng đặt  > số lượng 
 insert into HoaDon values ('HD07', 'Ban2', 'Mon3', 30, '1-1-2021')
+go
+
 -- TH đúng
 insert into HoaDon values ('HD07', 'Ban2', 'Mon3', 2, '1-1-2021')
+go
